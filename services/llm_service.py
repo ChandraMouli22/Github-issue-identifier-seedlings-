@@ -1,8 +1,7 @@
 import os
 import json
 import re
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
 SYSTEM_PROMPT = """
 You are an expert technical project manager and developer.
@@ -39,14 +38,28 @@ def clean_json(text: str) -> str:
 
 async def analyze_issue_with_llm(issue_data: dict) -> dict:
     """
-    Analyzes issue data using the Google Gemini SDK (new google.genai package).
+    Analyzes issue data using the Google Gemini SDK.
     """
     api_key = os.getenv("LLM_API_KEY")
     if not api_key:
         raise ValueError("LLM_API_KEY is missing in .env")
 
-    # Initialize the client with API key
-    client = genai.Client(api_key=api_key)
+    genai.configure(api_key=api_key)
+    
+    from google.generativeai.types import HarmCategory, HarmBlockThreshold
+    
+    model = genai.GenerativeModel(
+        model_name="gemini-flash-lite-latest",
+        generation_config={
+            "response_mime_type": "application/json"
+        },
+        safety_settings={
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+        }
+    )
 
     prompt = f"""
 {SYSTEM_PROMPT}
@@ -62,33 +75,7 @@ Provide the JSON output strictly adhering to the schema.
 """
 
     try:
-        # Use the new API with generate_content
-        response = await client.aio.models.generate_content(
-            model='gemini-2.0-flash-exp',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type='application/json',
-                safety_settings=[
-                    types.SafetySetting(
-                        category='HARM_CATEGORY_HATE_SPEECH',
-                        threshold='BLOCK_NONE'
-                    ),
-                    types.SafetySetting(
-                        category='HARM_CATEGORY_HARASSMENT',
-                        threshold='BLOCK_NONE'
-                    ),
-                    types.SafetySetting(
-                        category='HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                        threshold='BLOCK_NONE'
-                    ),
-                    types.SafetySetting(
-                        category='HARM_CATEGORY_DANGEROUS_CONTENT',
-                        threshold='BLOCK_NONE'
-                    ),
-                ]
-            )
-        )
-        
+        response = await model.generate_content_async(prompt)
         text = response.text
         
         cleaned_content = clean_json(text)
