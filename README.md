@@ -176,9 +176,7 @@ Analyzes a GitHub issue and returns AI-generated insights.
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📄 License
 
-This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
