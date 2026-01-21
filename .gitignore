@@ -39,6 +39,12 @@ footer_temp.css
 # Cache
 cache/
 
+# Testing
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
 # Build
 dist/
 build/
