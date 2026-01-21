@@ -305,7 +305,6 @@ select.model-select option {
     padding: 1.1rem;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     border: none;
-    border-radius: var(--radius-md);
     color: white;
     font-weight: 600;
     font-size: 1rem;

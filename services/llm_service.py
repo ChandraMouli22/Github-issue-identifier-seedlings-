@@ -184,7 +184,7 @@ Provide the JSON output strictly adhering to the schema.
             
             # If it's a rate limit error on last attempt, give helpful message
             if is_rate_limit:
-                raise ValueError(f"AI rate limit reached after {max_retries} retries. Please wait a minute and try again, or use the cached results for previously analyzed issues.")
+                raise ValueError(f"Rate limit reached for this model. Please try switching to Gemini Flash Lite or DeepSeek R1 Distill from the dropdown, or wait a minute and retry.")
             
             # For other errors, raise immediately
             raise ValueError(f"Gemini Error: {error_msg}")

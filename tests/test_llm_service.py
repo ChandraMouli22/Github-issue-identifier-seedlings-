@@ -143,7 +143,7 @@ async def test_analyze_issue_with_llm_max_retries_exceeded(mock_env_vars, sample
         mock_model_class.return_value = mock_model
         
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            with pytest.raises(ValueError, match="AI rate limit reached after 3 retries"):
+            with pytest.raises(ValueError, match="Rate limit reached for this model"):
                 await analyze_issue_with_llm(sample_issue_data)
 
 @pytest.mark.unit
