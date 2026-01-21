@@ -3,8 +3,11 @@
 AI-powered GitHub issue analysis tool that provides deep insights into repository issues using Google Gemini AI.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
+![CI/CD](https://github.com/ChandraMouli22/Github-issue-identifier-seedlings-/actions/workflows/tests.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-51%20passed-success.svg)
 
 ## ✨ Features
 
@@ -52,7 +55,7 @@ This project goes beyond the core requirements with production-ready features:
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - Node.js (for package management)
 - Google Gemini API key
 
@@ -91,6 +94,37 @@ uvicorn main:app --reload --port 3000
 ```
 http://localhost:3000
 ```
+
+## 🧪 Testing
+
+This project includes a comprehensive test suite with **96% code coverage** and **51 tests**.
+
+### Run Tests
+
+```bash
+# Activate virtual environment
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/Mac
+
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage report
+pytest tests/ --cov=services --cov=main --cov-report=term-missing
+
+# Run specific test categories
+pytest tests/ -m unit          # Unit tests only
+pytest tests/ -m integration   # Integration tests only
+```
+
+### Continuous Integration
+
+Every push and pull request automatically runs:
+- ✅ Tests across Python 3.10, 3.11, and 3.12
+- ✅ Code coverage reporting
+- ✅ Code quality checks with Ruff
+
+View test results in the [Actions tab](https://github.com/ChandraMouli22/Github-issue-identifier-seedlings-/actions).
 
 ## 📁 Project Structure
 
