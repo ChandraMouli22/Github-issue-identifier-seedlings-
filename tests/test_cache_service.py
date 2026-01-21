@@ -54,11 +54,11 @@ def test_cache_hit(temp_cache_dir):
         "potential_impact": "Low"
     }
     
-    # Save to cache first
-    save_to_cache("https://github.com/test/repo", 1, test_data)
+    # Save to cache first with dummy model
+    save_to_cache("https://github.com/test/repo", 1, "gemini-test", test_data)
     
-    # Retrieve from cache
-    result = get_cached_analysis("https://github.com/test/repo", 1)
+    # Retrieve from cache (model optional in get? No, get also needs model)
+    result = get_cached_analysis("https://github.com/test/repo", 1, "gemini-test")
     
     assert result is not None
     assert result["summary"] == "Test summary"
@@ -68,13 +68,13 @@ def test_cache_hit(temp_cache_dir):
 @pytest.mark.unit
 def test_cache_corrupted_file(temp_cache_dir):
     """Test that corrupted cache file returns None."""
-    cache_key = _generate_cache_key("https://github.com/test/repo", 1)
+    cache_key = _generate_cache_key("https://github.com/test/repo", 1, "gemini-test")
     cache_file = temp_cache_dir / f"{cache_key}.json"
     
     # Write invalid JSON
     cache_file.write_text("invalid json content")
     
-    result = get_cached_analysis("https://github.com/test/repo", 1)
+    result = get_cached_analysis("https://github.com/test/repo", 1, "gemini-test")
     assert result is None
 
 # ============================================================================
@@ -89,9 +89,9 @@ def test_save_to_cache_creates_file(temp_cache_dir):
         "type": "bug"
     }
     
-    save_to_cache("https://github.com/test/repo", 1, test_data)
+    save_to_cache("https://github.com/test/repo", 1, "gemini-test", test_data)
     
-    cache_key = _generate_cache_key("https://github.com/test/repo", 1)
+    cache_key = _generate_cache_key("https://github.com/test/repo", 1, "gemini-test")
     cache_file = temp_cache_dir / f"{cache_key}.json"
     
     assert cache_file.exists()
@@ -107,9 +107,9 @@ def test_save_to_cache_valid_json(temp_cache_dir):
         "potential_impact": "High"
     }
     
-    save_to_cache("https://github.com/test/repo", 42, test_data)
+    save_to_cache("https://github.com/test/repo", 42, "gemini-test", test_data)
     
-    cache_key = _generate_cache_key("https://github.com/test/repo", 42)
+    cache_key = _generate_cache_key("https://github.com/test/repo", 42, "gemini-test")
     cache_file = temp_cache_dir / f"{cache_key}.json"
     
     with open(cache_file, 'r', encoding='utf-8') as f:
@@ -123,10 +123,10 @@ def test_save_to_cache_overwrites_existing(temp_cache_dir):
     old_data = {"summary": "Old"}
     new_data = {"summary": "New"}
     
-    save_to_cache("https://github.com/test/repo", 1, old_data)
-    save_to_cache("https://github.com/test/repo", 1, new_data)
+    save_to_cache("https://github.com/test/repo", 1, "gemini-test", old_data)
+    save_to_cache("https://github.com/test/repo", 1, "gemini-test", new_data)
     
-    result = get_cached_analysis("https://github.com/test/repo", 1)
+    result = get_cached_analysis("https://github.com/test/repo", 1, "gemini-test")
     assert result["summary"] == "New"
 
 # ============================================================================
@@ -143,9 +143,9 @@ def test_clear_cache_empty(temp_cache_dir):
 def test_clear_cache_removes_files(temp_cache_dir):
     """Test that clear_cache removes all cache files."""
     # Create multiple cache entries
-    save_to_cache("https://github.com/test/repo1", 1, {"summary": "Test 1"})
-    save_to_cache("https://github.com/test/repo2", 2, {"summary": "Test 2"})
-    save_to_cache("https://github.com/test/repo3", 3, {"summary": "Test 3"})
+    save_to_cache("https://github.com/test/repo1", 1, "gemini-test", {"summary": "Test 1"})
+    save_to_cache("https://github.com/test/repo2", 2, "gemini-test", {"summary": "Test 2"})
+    save_to_cache("https://github.com/test/repo3", 3, "gemini-test", {"summary": "Test 3"})
     
     # Verify files exist
     assert len(list(temp_cache_dir.glob("*.json"))) == 3
@@ -160,7 +160,7 @@ def test_clear_cache_removes_files(temp_cache_dir):
 def test_clear_cache_only_json_files(temp_cache_dir):
     """Test that clear_cache only removes JSON files."""
     # Create cache file
-    save_to_cache("https://github.com/test/repo", 1, {"summary": "Test"})
+    save_to_cache("https://github.com/test/repo", 1, "gemini-test", {"summary": "Test"})
     
     # Create non-JSON file
     other_file = temp_cache_dir / "readme.txt"

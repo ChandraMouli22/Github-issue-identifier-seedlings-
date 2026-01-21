@@ -236,5 +236,6 @@ def test_analyze_endpoint_saves_to_cache():
                     mock_save.assert_called_once_with(
                         "https://github.com/test/repo",
                         1,
+                        "gemini-2.0-flash",
                         mock_analysis
                     )

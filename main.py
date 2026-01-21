@@ -44,7 +44,7 @@ app = FastAPI()
 class AnalyzeRequest(BaseModel):
     repoUrl: str
     issueNumber: int
-    model: str = "gemini-1.5-flash-latest"  # Default model
+    model: str = "gemini-2.0-flash"  # Default model
 
 # 1. API Routes
 @app.get("/health")
