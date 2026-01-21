@@ -3,3 +3,7 @@ uvicorn[standard]
 httpx
 google-generativeai
 python-dotenv
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
