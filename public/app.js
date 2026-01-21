@@ -126,7 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show
         resultContainer.classList.remove('hidden');
-        resultContainer.scrollIntoView({ behavior: 'smooth' });
+        // Scroll to show the entire result with some top padding
+        const yOffset = -250; // Large offset to account for navbar and show full "Analysis Report" header
+        const y = resultContainer.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
     }
 
     function setLoading(isLoading) {

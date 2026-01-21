@@ -413,7 +413,7 @@ select.model-select option {
 .impact-block p {
     font-size: 1rem;
     line-height: 1.7;
-    color: #cbd5e1;
+    /* color: #cbd5e1; */
     margin-bottom: 0;
 }
 
@@ -994,6 +994,37 @@ code {
 [data-theme="light"] .error-banner {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
+}
+
+/* Light mode text color overrides */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
+    color: var(--text-main);
+}
+
+[data-theme="light"] p,
+[data-theme="light"] .impact-block p,
+[data-theme="light"] .metadata-value {
+    color: var(--text-main) !important;
+}
+
+[data-theme="light"] .summary-block h3 {
+    color: var(--text-main);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select {
+    color: var(--text-main);
+}
+
+[data-theme="light"] .step-label {
+    color: var(--text-muted);
+}
+
+[data-theme="light"] .step.active .step-label {
+    color: var(--primary);
 }
 
 /* =========================================
