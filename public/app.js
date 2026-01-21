@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const repoUrl = document.getElementById('repoUrl').value;
         const issueNumber = document.getElementById('issueNumber').value;
+        const model = document.getElementById('modelSelect').value;
 
         try {
             // Step 1: Fetching
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ repoUrl, issueNumber })
+                body: JSON.stringify({ repoUrl, issueNumber, model })
             });
 
             // Step 2: Analyzing

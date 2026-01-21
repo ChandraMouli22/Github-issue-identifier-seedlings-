@@ -9,10 +9,34 @@ from fastapi.middleware.cors import CORSMiddleware
 # Load environment variables
 load_dotenv()
 
-# Import services
 from services.github_service import get_issue_data
 from services.llm_service import analyze_issue_with_llm
 from services.cache_service import get_cached_analysis, save_to_cache
+
+# Available models configuration
+AVAILABLE_MODELS = [
+    {
+        "id": "gemini-1.5-flash-latest",
+        "name": "Gemini 1.5 Flash",
+        "description": "Balanced speed and quality",
+        "speed": "fast",
+        "recommended": True
+    },
+    {
+        "id": "gemini-1.5-flash-8b-latest",
+        "name": "Gemini 1.5 Flash 8B",
+        "description": "Fastest, lightweight model",
+        "speed": "fastest",
+        "recommended": False
+    },
+    {
+        "id": "gemini-flash-lite-latest",
+        "name": "Gemini Flash Lite",
+        "description": "Current stable model",
+        "speed": "fast",
+        "recommended": False
+    }
+]
 
 app = FastAPI()
 
@@ -20,30 +44,36 @@ app = FastAPI()
 class AnalyzeRequest(BaseModel):
     repoUrl: str
     issueNumber: int
+    model: str = "gemini-1.5-flash-latest"  # Default model
 
 # 1. API Routes
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
 
+@app.get("/api/models")
+async def get_models():
+    """Get list of available AI models"""
+    return {"models": AVAILABLE_MODELS}
+
 @app.post("/api/analyze")
 async def analyze_issue(request: AnalyzeRequest):
     try:
-        print(f"Analyzing: {request.repoUrl} #{request.issueNumber}")
+        print(f"Analyzing: {request.repoUrl} #{request.issueNumber} with model: {request.model}")
         
-        # Check cache first
-        cached_result = get_cached_analysis(request.repoUrl, request.issueNumber)
+        # Check cache first (cache key includes model)
+        cached_result = get_cached_analysis(request.repoUrl, request.issueNumber, request.model)
         if cached_result:
             return cached_result
         
         # 1. Fetch from GitHub
         issue_data = await get_issue_data(request.repoUrl, request.issueNumber)
         
-        # 2. Analyze with Gemini
-        analysis = await analyze_issue_with_llm(issue_data)
+        # 2. Analyze with selected Gemini model
+        analysis = await analyze_issue_with_llm(issue_data, request.model)
         
-        # 3. Save to cache for future use
-        save_to_cache(request.repoUrl, request.issueNumber, analysis)
+        # 3. Save to cache for future use (with model in key)
+        save_to_cache(request.repoUrl, request.issueNumber, request.model, analysis)
         
         return analysis
 

@@ -37,9 +37,13 @@ def clean_json(text: str) -> str:
     
     return clean
 
-async def analyze_issue_with_llm(issue_data: dict) -> dict:
+async def analyze_issue_with_llm(issue_data: dict, model_name: str = "gemini-1.5-flash-latest") -> dict:
     """
     Analyzes issue data using the Google Gemini SDK with retry logic.
+    
+    Args:
+        issue_data: Dictionary containing issue title, body, and comments
+        model_name: Name of the Gemini model to use
     """
     api_key = os.getenv("LLM_API_KEY")
     if not api_key:
@@ -50,7 +54,7 @@ async def analyze_issue_with_llm(issue_data: dict) -> dict:
     from google.generativeai.types import HarmCategory, HarmBlockThreshold
     
     model = genai.GenerativeModel(
-        model_name="gemini-flash-lite-latest",
+        model_name=model_name,  # Use the provided model name
         generation_config={
             "response_mime_type": "application/json"
         },
