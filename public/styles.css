@@ -271,8 +271,8 @@ input:focus {
 
 .result-grid {
     display: grid;
-    grid-template-columns: 3fr 2fr;
-    /* 60/40 Split */
+    grid-template-columns: minmax(0, 60%) minmax(0, 40%);
+    /* 60/40 Split - Fixed proportions with minmax to prevent overflow */
     gap: 2rem;
 }
 
@@ -290,6 +290,10 @@ input:focus {
     flex-direction: column;
     min-height: 550px;
     /* Tall cards */
+    overflow: hidden;
+    /* Prevent content from overflowing */
+    max-width: 100%;
+    /* Ensure cards don't exceed grid column width */
 }
 
 .card-header {
@@ -325,10 +329,10 @@ input:focus {
     font-weight: 500;
     line-height: 1.3;
     margin: 0.5rem 0 2rem;
-    background: linear-gradient(to right, #fff, #cbd5e1);
+    /* background: linear-gradient(to right, #fff, #cbd5e1);
     -webkit-background-clip: text;
     background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-text-fill-color: transparent; */
 }
 
 .impact-block {
@@ -989,11 +993,12 @@ code {
 .code-editor {
     display: flex;
     flex-direction: column;
-    flex: 1;
     background: #1e1e1e;
     border: 1px solid #333;
+    border-radius: var(--radius-md);
     overflow: hidden;
-    min-height: 0;
+    max-height: 550px;
+    /* Match card min-height */
 }
 
 .editor-chrome {
@@ -1039,7 +1044,8 @@ code {
 
 .editor-content {
     flex: 1;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
     background: #1e1e1e;
     min-height: 0;
 }
@@ -1050,13 +1056,18 @@ code {
     height: 100%;
 }
 
+
 .editor-content code {
     font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
     font-size: 0.875rem;
     line-height: 1.6;
     color: #d4d4d4;
     white-space: pre;
-    display: block;
+    /* Keep original formatting */
+    display: inline-block;
+    /* Allow horizontal scroll */
+    min-width: 100%;
+    /* Take full width minimum */
 }
 
 /* Scrollbar for editor */
