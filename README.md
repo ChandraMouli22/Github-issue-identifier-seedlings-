@@ -1,6 +1,6 @@
 # GitHub Issue Analyzer 🔍
 
-AI-powered GitHub issue analysis tool that provides deep insights into repository issues using Google Gemini AI.
+AI-powered GitHub issue analysis tool that provides deep insights into repository issues using multiple LLM providers (Google Gemini and Hugging Face).
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
@@ -11,7 +11,7 @@ AI-powered GitHub issue analysis tool that provides deep insights into repositor
 
 ## ✨ Features
 
-- **🤖 AI-Powered Analysis** - Uses Google Gemini AI to analyze GitHub issues
+- **🤖 Multi-Model AI Support** - Choose from Google Gemini or Hugging Face models (DeepSeek R1, Llama 3.1)
 - **📊 Smart Insights** - Generates summary, priority score, and impact assessment
 - **🏷️ Label Suggestions** - Recommends appropriate labels for better organization
 - **📈 Progress Tracking** - Visual 3-step progress indicator (Fetching → Analyzing → Complete)
@@ -24,11 +24,20 @@ AI-powered GitHub issue analysis tool that provides deep insights into repositor
 
 This project goes beyond the core requirements with production-ready features:
 
+### 🤖 Multi-Model LLM Support
+- **Multiple AI providers** - Choose between Google Gemini and Hugging Face models
+- **6 models available** - 3 Gemini models + 3 Hugging Face models (DeepSeek R1, Llama 3.1)
+- **Provider abstraction** - Seamless switching between providers with unified API
+- **Model-specific features** - DeepSeek R1 reasoning support with `<think>` tag parsing
+- **Fallback suggestions** - Rate limit errors suggest alternative models
+- **Impact**: Flexibility to choose the best model for your use case, avoid vendor lock-in
+
 ### 🗄️ Intelligent Caching System
 - **Automatic result caching** - Analysis results are stored locally using MD5-hashed cache keys
+- **Model-specific caching** - Each model's analysis is cached separately
 - **Instant responses** - Previously analyzed issues return instantly without API calls
 - **Persistent storage** - Cache survives server restarts
-- **Smart invalidation** - Each unique repo/issue combination gets its own cache entry
+- **Smart invalidation** - Each unique repo/issue/model combination gets its own cache entry
 - **Impact**: Dramatically reduces API usage and prevents rate limit errors
 
 ### 🔄 Retry Logic with Exponential Backoff
@@ -52,7 +61,7 @@ This project goes beyond the core requirements with production-ready features:
 - **User feedback** - Clear, actionable error messages in the UI
 
 ### 🧪 Comprehensive Testing & CI/CD
-- **96% code coverage** - 51 automated tests covering all services and endpoints
+- **96% code coverage** - 52 automated tests covering all services and endpoints
 - **Multi-version testing** - Tests run on Python 3.10, 3.11, and 3.12
 - **GitHub Actions CI/CD** - Automated testing on every push and pull request
 - **Unit & integration tests** - Complete test suite with mocking for external APIs
@@ -65,7 +74,8 @@ This project goes beyond the core requirements with production-ready features:
 
 - Python 3.10+
 - Node.js (for package management)
-- Google Gemini API key
+- Google Gemini API key (required)
+- Hugging Face API key (optional, for HF models)
 
 ### Installation
 
@@ -89,8 +99,9 @@ pip install -r requirements.txt
 
 4. **Set up environment variables**
 ```bash
-# Create .env file
+# Create .env file with required API keys
 echo LLM_API_KEY=your_gemini_api_key_here > .env
+echo HF_API_KEY=your_huggingface_api_key_here >> .env
 ```
 
 5. **Run the application**
@@ -186,15 +197,33 @@ Create a `.env` file in the root directory:
 # Required: Google Gemini API Key
 LLM_API_KEY=your_google_gemini_api_key
 
+# Optional: Hugging Face API Key (for DeepSeek, Llama models)
+HF_API_KEY=your_huggingface_api_key
+
 # Optional: GitHub Personal Access Token (for higher rate limits)
 GITHUB_TOKEN=your_github_token_here
 ```
 
 **Getting API Keys:**
 - **Gemini API**: Get your free API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Hugging Face API**: Get your free API key at [Hugging Face Settings](https://huggingface.co/settings/tokens)
+  - Required for DeepSeek R1 and Llama 3.1 models
+  - **Note**: Llama 3.1 requires accepting the model license on Hugging Face
 - **GitHub Token** (Optional): Generate at [GitHub Settings → Tokens](https://github.com/settings/tokens)
   - Increases rate limit from 60 to 5,000 requests/hour
   - Recommended for production use
+
+### Available Models
+
+**Google Gemini (LLM_API_KEY required):**
+- `gemini-2.0-flash` - Latest generation, balanced performance
+- `gemini-2.0-flash-lite` - Fastest, lightweight model
+- `gemini-flash-lite-latest` - Previous stable generation
+
+**Hugging Face (HF_API_KEY required):**
+- `deepseek-ai/DeepSeek-R1` - Full 671B reasoning model (slower but powerful)
+- `deepseek-ai/DeepSeek-R1-Distill-Llama-8B` - Fast reasoning model (recommended)
+- `meta-llama/Meta-Llama-3.1-8B-Instruct` - Meta's latest (requires license acceptance)
 
 ### Interactive API Documentation
 
@@ -207,16 +236,19 @@ These provide a live, interactive interface to test the API endpoints directly f
 
 ### Rate Limits & Caching
 
-- **Gemini Free Tier**: ~15 requests/minute for `gemini-flash-lite-latest`
+- **Gemini Free Tier**: ~15 requests/minute
+- **Hugging Face Free Tier**: Varies by model, generally generous
 - **Automatic Retry**: 3 attempts with exponential backoff (5s, 10s, 20s)
-- **Caching**: Previously analyzed issues return instantly from cache
+- **Model Switching**: Rate limit errors suggest switching to alternative models
+- **Caching**: Previously analyzed issues return instantly from cache (per model)
 - **GitHub API**: 60 requests/hour (unauthenticated) or 5,000/hour (with token)
 
 ## 🛠️ Tech Stack
 
 **Backend:**
 - FastAPI - Modern Python web framework with auto-generated API docs
-- Google Gemini AI - AI analysis with structured JSON output
+- Google Gemini AI - Fast, reliable AI analysis
+- Hugging Face Inference API - Open-source models (DeepSeek, Llama)
 - httpx - Async HTTP client for GitHub API integration
 - File-based caching - MD5-hashed cache keys for instant results
 - Exponential backoff retry logic - Resilient API error handling
@@ -243,7 +275,8 @@ Analyzes a GitHub issue and returns AI-generated insights.
 ```json
 {
   "repoUrl": "https://github.com/owner/repo",
-  "issueNumber": "123"
+  "issueNumber": "123",
+  "model": "gemini-2.0-flash"  // Optional, defaults to gemini-2.0-flash
 }
 ```
 
@@ -290,6 +323,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 🙏 Acknowledgments
 
 - Google Gemini AI for powerful analysis capabilities
+- Hugging Face for open-source model infrastructure
 - GitHub API for issue data
 - FastAPI for excellent Python web framework
 
@@ -299,4 +333,4 @@ For questions or feedback, please open an issue on GitHub.
 
 ---
 
-**Built with ❤️ using Google Gemini AI**
+**Built with ❤️ using Google Gemini AI & Hugging Face**
