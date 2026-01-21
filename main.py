@@ -12,6 +12,7 @@ load_dotenv()
 # Import services
 from services.github_service import get_issue_data
 from services.llm_service import analyze_issue_with_llm
+from services.cache_service import get_cached_analysis, save_to_cache
 
 app = FastAPI()
 
@@ -30,11 +31,19 @@ async def analyze_issue(request: AnalyzeRequest):
     try:
         print(f"Analyzing: {request.repoUrl} #{request.issueNumber}")
         
+        # Check cache first
+        cached_result = get_cached_analysis(request.repoUrl, request.issueNumber)
+        if cached_result:
+            return cached_result
+        
         # 1. Fetch from GitHub
         issue_data = await get_issue_data(request.repoUrl, request.issueNumber)
         
         # 2. Analyze with Gemini
         analysis = await analyze_issue_with_llm(issue_data)
+        
+        # 3. Save to cache for future use
+        save_to_cache(request.repoUrl, request.issueNumber, analysis)
         
         return analysis
 

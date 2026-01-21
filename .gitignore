@@ -36,6 +36,9 @@ Thumbs.db
 *.tmp
 footer_temp.css
 
+# Cache
+cache/
+
 # Build
 dist/
 build/
