@@ -42,6 +42,13 @@ def test_clean_json_no_braces():
     result = clean_json(text)
     assert result == 'No JSON here'
 
+@pytest.mark.unit
+def test_clean_json_with_think_tags():
+    """Test removing <think> blocks (DeepSeek R1 reasoning)."""
+    text = '<think>\nHere is my reasoning process...\n</think>\n{"summary": "Test"}'
+    result = clean_json(text)
+    assert result == '{"summary": "Test"}'
+
 # ============================================================================
 # Unit Tests for analyze_issue_with_llm
 # ============================================================================

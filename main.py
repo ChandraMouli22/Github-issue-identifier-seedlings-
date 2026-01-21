@@ -15,26 +15,55 @@ from services.cache_service import get_cached_analysis, save_to_cache
 
 # Available models configuration
 AVAILABLE_MODELS = [
+    # Google Gemini Models
     {
-        "id": "gemini-1.5-flash-latest",
-        "name": "Gemini 1.5 Flash",
-        "description": "Balanced speed and quality",
+        "id": "gemini-2.0-flash",
+        "name": "Gemini 2.0 Flash",
+        "description": "Newest generation",
         "speed": "fast",
-        "recommended": True
+        "recommended": False,
+        "provider": "google"
     },
     {
-        "id": "gemini-1.5-flash-8b-latest",
-        "name": "Gemini 1.5 Flash 8B",
-        "description": "Fastest, lightweight model",
+        "id": "gemini-2.0-flash-lite",
+        "name": "Gemini 2.0 Flash Lite",
+        "description": "Lightweight & efficient",
         "speed": "fastest",
-        "recommended": False
+        "recommended": False,
+        "provider": "google"
     },
     {
         "id": "gemini-flash-lite-latest",
         "name": "Gemini Flash Lite",
-        "description": "Current stable model",
+        "description": "Previous stable generation",
         "speed": "fast",
-        "recommended": False
+        "recommended": False,
+        "provider": "google"
+    },
+    # Hugging Face Models
+    {
+        "id": "deepseek-ai/DeepSeek-R1",
+        "name": "DeepSeek R1",
+        "description": "Full 671B Base Model",
+        "speed": "slow",
+        "recommended": False,
+        "provider": "huggingface"
+    },
+    {
+        "id": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+        "name": "DeepSeek R1 Distill",
+        "description": "Powerful reasoning model",
+        "speed": "medium",
+        "recommended": True,
+        "provider": "huggingface"
+    },
+    {
+        "id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "name": "Llama 3.1 8B",
+        "description": "Meta's latest open model",
+        "speed": "fast",
+        "recommended": False,
+        "provider": "huggingface"
     }
 ]
 
@@ -61,6 +90,13 @@ async def analyze_issue(request: AnalyzeRequest):
     try:
         print(f"Analyzing: {request.repoUrl} #{request.issueNumber} with model: {request.model}")
         
+        # Determine provider based on model ID
+        provider = "google" # Default
+        for m in AVAILABLE_MODELS:
+            if m["id"] == request.model:
+                provider = m.get("provider", "google")
+                break
+        
         # Check cache first (cache key includes model)
         cached_result = get_cached_analysis(request.repoUrl, request.issueNumber, request.model)
         if cached_result:
@@ -69,8 +105,8 @@ async def analyze_issue(request: AnalyzeRequest):
         # 1. Fetch from GitHub
         issue_data = await get_issue_data(request.repoUrl, request.issueNumber)
         
-        # 2. Analyze with selected Gemini model
-        analysis = await analyze_issue_with_llm(issue_data, request.model)
+        # 2. Analyze with selected LLM and provider
+        analysis = await analyze_issue_with_llm(issue_data, request.model, provider)
         
         # 3. Save to cache for future use (with model in key)
         save_to_cache(request.repoUrl, request.issueNumber, request.model, analysis)

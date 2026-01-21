@@ -3,6 +3,8 @@ import json
 import re
 import asyncio
 import google.generativeai as genai
+import httpx
+from huggingface_hub import AsyncInferenceClient
 
 SYSTEM_PROMPT = """
 You are an expert technical project manager and developer.
@@ -23,7 +25,11 @@ Output Schema:
 def clean_json(text: str) -> str:
     """
     Cleans the LLM response to ensure valid JSON.
+    Removes markdown code blocks and reasoning tags like <think>...</think>.
     """
+    # Remove <think> blocks (DeepSeek R1 reasoning)
+    text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+    
     # Remove markdown code blocks
     clean = re.sub(r'```json', '', text)
     clean = re.sub(r'```', '', clean).strip()
@@ -37,7 +43,72 @@ def clean_json(text: str) -> str:
     
     return clean
 
-async def analyze_issue_with_llm(issue_data: dict, model_name: str = "gemini-1.5-flash-latest") -> dict:
+async def analyze_issue_with_llm(issue_data: dict, model_name: str = "gemini-2.0-flash", provider: str = "google") -> dict:
+    """
+    Dispatcher function to route analysis to the correct LLM provider.
+    """
+    if provider == "huggingface":
+        return await analyze_with_huggingface(issue_data, model_name)
+    elif provider == "google":
+        return await analyze_with_gemini(issue_data, model_name)
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
+
+async def analyze_with_huggingface(issue_data: dict, model_name: str) -> dict:
+    """
+    Analyzes issue using Hugging Face Inference API via AsyncInferenceClient.
+    """
+    api_key = os.getenv("HF_API_KEY")
+    if not api_key:
+        raise ValueError("HF_API_KEY is missing in .env")
+
+    # Initialize Async Client
+    client = AsyncInferenceClient(token=api_key)
+
+    prompt = f"""
+{SYSTEM_PROMPT}
+
+Analyze the following GitHub Issue:
+
+Title: {issue_data['title']}
+Body: {issue_data['body']}
+Comments Summary:
+{issue_data['comments']}
+
+Provide the JSON output strictly adhering to the schema.
+"""
+    
+    messages = [
+        {"role": "user", "content": prompt}
+    ]
+
+    try:
+        # Use chat_completion which handles format automatically
+        response = await client.chat_completion(
+            messages=messages,
+            model=model_name,
+            max_tokens=1024,
+            temperature=0.1
+        )
+        
+        # Extract content
+        content = response.choices[0].message.content
+        if not content:
+            raise ValueError("Empty response from Hugging Face model")
+            
+        cleaned_text = clean_json(content)
+        return json.loads(cleaned_text)
+                 
+    except json.JSONDecodeError:
+        print(f"Failed JSON: {content}")
+        raise ValueError("Failed to parse Hugging Face response as JSON")
+    except Exception as e:
+        error_msg = str(e)
+        if "404" in error_msg or "model_not_found" in error_msg:
+             raise ValueError(f"Model {model_name} not found or access denied (Gated).")
+        raise ValueError(f"Hugging Face API Error: {error_msg}")
+
+async def analyze_with_gemini(issue_data: dict, model_name: str) -> dict:
     """
     Analyzes issue data using the Google Gemini SDK with retry logic.
     
