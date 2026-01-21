@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import asyncio
 import google.generativeai as genai
 
 SYSTEM_PROMPT = """
@@ -38,7 +39,7 @@ def clean_json(text: str) -> str:
 
 async def analyze_issue_with_llm(issue_data: dict) -> dict:
     """
-    Analyzes issue data using the Google Gemini SDK.
+    Analyzes issue data using the Google Gemini SDK with retry logic.
     """
     api_key = os.getenv("LLM_API_KEY")
     if not api_key:
@@ -74,25 +75,42 @@ Comments Summary:
 Provide the JSON output strictly adhering to the schema.
 """
 
-    try:
-        response = await model.generate_content_async(prompt)
-        text = response.text
-        
-        cleaned_content = clean_json(text)
-        
+    # Retry logic with exponential backoff
+    max_retries = 3
+    base_delay = 5  # Start with 5 seconds
+    
+    for attempt in range(max_retries):
         try:
-            return json.loads(cleaned_content)
-        except json.JSONDecodeError as e:
-            print(f"JSON Parse Error: {e}")
-            print(f"Raw Content: {text}")
-            raise ValueError("Failed to parse LLM response as JSON")
+            response = await model.generate_content_async(prompt)
+            text = response.text
+            
+            cleaned_content = clean_json(text)
+            
+            try:
+                return json.loads(cleaned_content)
+            except json.JSONDecodeError as e:
+                print(f"JSON Parse Error: {e}")
+                print(f"Raw Content: {text}")
+                raise ValueError("Failed to parse LLM response as JSON")
 
-    except Exception as e:
-        error_msg = str(e)
-        print(f"Gemini SDK Error: {error_msg}")
-        
-        # Check if it's a rate limit error (429)
-        if "429" in error_msg or "quota" in error_msg.lower() or "rate limit" in error_msg.lower():
-            raise ValueError("AI rate limit reached. Please wait a few seconds and try again.")
-        
-        raise ValueError(f"Gemini Error: {error_msg}")
+        except Exception as e:
+            error_msg = str(e)
+            print(f"Gemini SDK Error (Attempt {attempt + 1}/{max_retries}): {error_msg}")
+            
+            # Check if it's a rate limit error (429)
+            is_rate_limit = "429" in error_msg or "quota" in error_msg.lower() or "rate limit" in error_msg.lower() or "resource_exhausted" in error_msg.lower()
+            
+            if is_rate_limit and attempt < max_retries - 1:
+                # Exponential backoff: 5s, 10s, 20s
+                delay = base_delay * (2 ** attempt)
+                print(f"⏳ Rate limit hit. Waiting {delay} seconds before retry...")
+                await asyncio.sleep(delay)
+                continue
+            
+            # If it's a rate limit error on last attempt, give helpful message
+            if is_rate_limit:
+                raise ValueError(f"AI rate limit reached after {max_retries} retries. Please wait a minute and try again, or use the cached results for previously analyzed issues.")
+            
+            # For other errors, raise immediately
+            raise ValueError(f"Gemini Error: {error_msg}")
+
