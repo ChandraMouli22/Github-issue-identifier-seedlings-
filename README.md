@@ -2,6 +2,14 @@
 
 AI-powered GitHub issue analysis tool that provides deep insights into repository issues using multiple LLM providers (Google Gemini and Hugging Face).
 
+## 🚀 Live Demo
+
+**Try it now:** [https://github-issue-analyzer.onrender.com](https://github-issue-analyzer.onrender.com)
+
+[![Deploy Status](https://img.shields.io/badge/deployment-live-success.svg)](https://github-issue-analyzer.onrender.com)
+
+---
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
