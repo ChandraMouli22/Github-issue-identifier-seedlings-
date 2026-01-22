@@ -105,7 +105,11 @@ Provide the JSON output strictly adhering to the schema.
     except Exception as e:
         error_msg = str(e)
         if "404" in error_msg or "model_not_found" in error_msg:
-             raise ValueError(f"Model {model_name} not found or access denied (Gated).")
+            raise ValueError(
+                f"The model '{model_name}' is not available or access is denied (gated model). "
+                "Please check if you have access to this model on Hugging Face. "
+                "If not, consider switching to an open-access model such as DeepSeek or Gemini Flash Lite for best results."
+            )
         raise ValueError(f"Hugging Face API Error: {error_msg}")
 
 async def analyze_with_gemini(issue_data: dict, model_name: str) -> dict:
