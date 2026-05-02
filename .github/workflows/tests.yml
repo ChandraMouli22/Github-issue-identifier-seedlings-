@@ -8,7 +8,40 @@ on:
 
 jobs:
   test:
-    name: Build & Test
+    name: Test (JDK ${{ matrix.java-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        java-version: ['17', '21', '22']
+
+    defaults:
+      run:
+        working-directory: java-app
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Build and Test
+      run: mvn clean verify
+
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-reports-jdk-${{ matrix.java-version }}
+        path: java-app/target/surefire-reports/
+
+  code-quality:
+    name: Code Quality Check
     runs-on: ubuntu-latest
 
     defaults:
@@ -26,12 +59,9 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
-    - name: Build and Test
-      run: mvn clean verify
+    - name: Compile and check for warnings
+      run: mvn clean compile -Xlint:all
 
-    - name: Upload test reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-reports
-        path: java-app/target/surefire-reports/
+    - name: Verify no unused dependencies
+      run: mvn dependency:analyze
+      continue-on-error: true
