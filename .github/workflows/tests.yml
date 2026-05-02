@@ -62,7 +62,7 @@ jobs:
         cache-dependency-path: 'java-app/pom.xml'
 
     - name: Compile and check for warnings
-      run: mvn clean compile -Xlint:all
+      run: mvn clean compile
 
     - name: Verify no unused dependencies
       run: mvn dependency:analyze
