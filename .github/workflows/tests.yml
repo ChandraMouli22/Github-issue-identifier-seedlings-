@@ -29,6 +29,7 @@ jobs:
         java-version: ${{ matrix.java-version }}
         distribution: 'temurin'
         cache: 'maven'
+        cache-dependency-path: 'java-app/pom.xml'
 
     - name: Build and Test
       run: mvn clean verify
@@ -58,6 +59,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: 'maven'
+        cache-dependency-path: 'java-app/pom.xml'
 
     - name: Compile and check for warnings
       run: mvn clean compile -Xlint:all
